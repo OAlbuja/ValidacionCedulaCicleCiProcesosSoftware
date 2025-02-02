@@ -1,0 +1,26 @@
+<div class="container">
+  <h2>Validación de Cédula Ecuatoriana</h2>
+  <form (ngSubmit)="validar()">
+    <div class="form-group">
+      <label for="cedula">Cédula:</label>
+      <input
+        id="cedula"
+        name="cedula"
+        type="text"
+        [(ngModel)]="cedula"
+        placeholder="Ingresa la cédula"
+        required
+      />
+    </div>
+    <button type="submit">Validar</button>
+  </form>
+
+  <div *ngIf="errorMessage" class="error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="resultado">
+    <h3>Resultado:</h3>
+    <p>{{ resultado?.mensaje }}</p>
+  </div>
+</div>
