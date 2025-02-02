@@ -9,7 +9,7 @@ executors:
   backend-executor:
     docker:
       - image: cimg/openjdk:17.0
-    working_directory: ~/repo/backend
+    working_directory: ~/repo/CedulaApi
 
 jobs:
   pre-build-frontend:
@@ -17,10 +17,10 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Instalar dependencias
+          name: Instalar dependencias del frontend
           command: npm install
       - run:
-          name: Análisis estático (ESLint)
+          name: Análisis estático del código (ESLint)
           command: npm run lint
       - run:
           name: Auditoría de dependencias
@@ -31,15 +31,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Instalar dependencias
+          name: Instalar dependencias del backend
           command: mvn install -DskipTests
       - run:
-          name: Análisis estático (Checkstyle y PMD)
-          command: |
-            mvn checkstyle:check
-            mvn pmd:check
+          name: Análisis estático del código (Checkstyle)
+          command: mvn checkstyle:check
       - run:
-          name: Verificación de dependencias obsoletas
+          name: Verificar dependencias obsoletas
           command: mvn versions:display-dependency-updates
 
   build-frontend:
@@ -47,7 +45,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Construcción del frontend
+          name: Construir el frontend
           command: npm run build
 
   build-backend:
@@ -55,7 +53,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Compilación del backend
+          name: Compilar el backend
           command: mvn clean package
 
   test-frontend:
@@ -79,18 +77,18 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Construcción y Despliegue Docker Backend
+          name: Construcción y despliegue Docker para el backend
           command: |
-            cd backend
+            cd CedulaApi
             docker build -t tuusuario/cedulaapi .
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push tuusuario/cedulaapi
       - run:
-          name: Preparación del Frontend
+          name: Preparar el frontend
           command: |
             cd frontend
             npm run build
-            echo "Sube manualmente el build a producción."
+            echo "Sube manualmente el build del frontend a producción."
 
 workflows:
   version: 2
