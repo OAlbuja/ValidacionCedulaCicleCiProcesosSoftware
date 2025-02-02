@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { CommonModule } from '@angular/common'
 import { CedulaService, CedulaResponse } from '../services/cedula.service';
 
 @Component({
   selector: 'app-cedula-validator',
   standalone: true,
-  imports: [FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './cedula-validator.component.html',
   styleUrls: ['./cedula-validator.component.css']
 })
