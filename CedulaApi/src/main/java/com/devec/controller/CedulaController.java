@@ -3,7 +3,6 @@ package com.devec.controller;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,14 +19,13 @@ public class CedulaController {
 
     private final CedulaValidatorService cedulaValidatorService;
 
-    @Autowired
-    public CedulaController(CedulaValidatorService cedulaValidatorService) {
+    public CedulaController(final CedulaValidatorService cedulaValidatorService) {
         this.cedulaValidatorService = cedulaValidatorService;
     }
 
     // Endpoint GET para validar la cédula: /api/cedulas/validar?cedula=0931811087
     @GetMapping("/validar")
-    public ResponseEntity<Map<String, Object>> validarCedula(@RequestParam("cedula") String cedula) {
+    public ResponseEntity<Map<String, Object>> validarCedula(@RequestParam("cedula") final String cedula) {
         boolean esValida = cedulaValidatorService.validarCedula(cedula);
         
         Map<String, Object> respuesta = new HashMap<>();
