@@ -4,12 +4,12 @@ executors:
   frontend-executor:
     docker:
       - image: cimg/node:20.0
-    working_directory: ~/repo/frontend
+    working_directory: ~/repo  # Usamos el directorio raíz del repo
 
   backend-executor:
     docker:
       - image: cimg/openjdk:17.0
-    working_directory: ~/repo/CedulaApi
+    working_directory: ~/repo  # Usamos el directorio raíz del repo
 
 jobs:
   pre-build-frontend:
@@ -18,13 +18,13 @@ jobs:
       - checkout
       - run:
           name: Instalar dependencias del frontend
-          command: npm install
+          command: cd frontend && npm install
       - run:
           name: Análisis estático del código (ESLint)
-          command: npm run lint
+          command: cd frontend && npm run lint
       - run:
-          name: Auditoría de dependencias
-          command: npm audit --audit-level=moderate || echo "Vulnerabilidades detectadas"
+          name: Auditoría de dependencias del frontend
+          command: cd frontend && npm audit --audit-level=moderate || echo "Vulnerabilidades detectadas"
 
   pre-build-backend:
     executor: backend-executor
@@ -32,13 +32,13 @@ jobs:
       - checkout
       - run:
           name: Instalar dependencias del backend
-          command: mvn install -DskipTests
+          command: cd CedulaApi && mvn install -DskipTests
       - run:
           name: Análisis estático del código (Checkstyle)
-          command: mvn checkstyle:check
+          command: cd CedulaApi && mvn checkstyle:check
       - run:
-          name: Verificar dependencias obsoletas
-          command: mvn versions:display-dependency-updates
+          name: Verificar dependencias obsoletas en el backend
+          command: cd CedulaApi && mvn versions:display-dependency-updates
 
   build-frontend:
     executor: frontend-executor
@@ -46,7 +46,7 @@ jobs:
       - checkout
       - run:
           name: Construir el frontend
-          command: npm run build
+          command: cd frontend && npm run build
 
   build-backend:
     executor: backend-executor
@@ -54,7 +54,7 @@ jobs:
       - checkout
       - run:
           name: Compilar el backend
-          command: mvn clean package
+          command: cd CedulaApi && mvn clean package
 
   test-frontend:
     executor: frontend-executor
@@ -62,7 +62,7 @@ jobs:
       - checkout
       - run:
           name: Ejecutar pruebas unitarias del frontend
-          command: npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
+          command: cd frontend && npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
 
   test-backend:
     executor: backend-executor
@@ -70,7 +70,7 @@ jobs:
       - checkout
       - run:
           name: Ejecutar pruebas unitarias del backend
-          command: mvn test
+          command: cd CedulaApi && mvn test
 
   deploy:
     machine: true
@@ -84,7 +84,7 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push tuusuario/cedulaapi
       - run:
-          name: Preparar el frontend
+          name: Preparar el frontend para producción
           command: |
             cd frontend
             npm run build
