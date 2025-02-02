@@ -38,4 +38,3 @@ public class CedulaController {
         return ResponseEntity.ok(respuesta);
     }
 }
-

@@ -1,0 +1,116 @@
+version: 2.1
+
+executors:
+  frontend-executor:
+    docker:
+      - image: cimg/node:20.0
+    working_directory: ~/repo/frontend
+
+  backend-executor:
+    docker:
+      - image: cimg/openjdk:17.0
+    working_directory: ~/repo/backend
+
+jobs:
+  pre-build-frontend:
+    executor: frontend-executor
+    steps:
+      - checkout
+      - run:
+          name: Instalar dependencias
+          command: npm install
+      - run:
+          name: Análisis estático (ESLint)
+          command: npm run lint
+      - run:
+          name: Auditoría de dependencias
+          command: npm audit --audit-level=moderate || echo "Vulnerabilidades detectadas"
+
+  pre-build-backend:
+    executor: backend-executor
+    steps:
+      - checkout
+      - run:
+          name: Instalar dependencias
+          command: mvn install -DskipTests
+      - run:
+          name: Análisis estático (Checkstyle y PMD)
+          command: |
+            mvn checkstyle:check
+            mvn pmd:check
+      - run:
+          name: Verificación de dependencias obsoletas
+          command: mvn versions:display-dependency-updates
+
+  build-frontend:
+    executor: frontend-executor
+    steps:
+      - checkout
+      - run:
+          name: Construcción del frontend
+          command: npm run build
+
+  build-backend:
+    executor: backend-executor
+    steps:
+      - checkout
+      - run:
+          name: Compilación del backend
+          command: mvn clean package
+
+  test-frontend:
+    executor: frontend-executor
+    steps:
+      - checkout
+      - run:
+          name: Ejecutar pruebas unitarias del frontend
+          command: npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
+
+  test-backend:
+    executor: backend-executor
+    steps:
+      - checkout
+      - run:
+          name: Ejecutar pruebas unitarias del backend
+          command: mvn test
+
+  deploy:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Construcción y Despliegue Docker Backend
+          command: |
+            cd backend
+            docker build -t tuusuario/cedulaapi .
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push tuusuario/cedulaapi
+      - run:
+          name: Preparación del Frontend
+          command: |
+            cd frontend
+            npm run build
+            echo "Sube manualmente el build a producción."
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - pre-build-frontend
+      - pre-build-backend
+      - build-frontend:
+          requires:
+            - pre-build-frontend
+      - build-backend:
+          requires:
+            - pre-build-backend
+      - test-frontend:
+          requires:
+            - build-frontend
+      - test-backend:
+          requires:
+            - build-backend
+      - deploy:
+          requires:
+            - test-frontend
+            - test-backend
