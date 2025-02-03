@@ -46,7 +46,7 @@ jobs:
       - checkout
       - run:
           name: Construir el frontend
-          command: cd frontend && npm run build
+          command: npx ng build --configuration=production
 
   build-backend:
     executor: backend-executor
