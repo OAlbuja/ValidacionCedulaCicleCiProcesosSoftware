@@ -18,13 +18,13 @@ jobs:
       - checkout
       - run:
           name: Instalar dependencias del frontend
-          command: cd frontend && npm install
+          command: npm install
       - run:
           name: Análisis estático del código (ESLint)
-          command: cd frontend && npm run lint
+          command: npm run lint
       - run:
           name: Auditoría de dependencias del frontend
-          command: cd frontend && npm audit --audit-level=moderate || echo "Vulnerabilidades detectadas"
+          command: npm audit --audit-level=moderate || echo "Vulnerabilidades detectadas"
 
   pre-build-backend:
     executor: backend-executor
