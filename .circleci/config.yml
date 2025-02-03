@@ -82,25 +82,6 @@ jobs:
           name: Ejecutar pruebas unitarias del backend
           command: cd CedulaApi && mvn test
 
-  deploy:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - checkout
-      - run:
-          name: Construcción de imágenes Docker
-          command: |
-            docker build -t mi-backend:latest -f CedulaApi/Dockerfile CedulaApi
-            docker build -t mi-frontend:latest -f frontend/Dockerfile frontend
-      - run:
-          name: Levantar aplicación con Docker Compose
-          command: |
-            docker-compose up -d
-      - run:
-          name: Verificar contenedores corriendo
-          command: |
-            docker ps
-
 workflows:
   version: 2
   build-test-deploy:
@@ -119,7 +100,3 @@ workflows:
       - test-backend:
           requires:
             - build-backend
-      - deploy:
-          requires:
-            - test-frontend
-            - test-backend
