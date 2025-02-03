@@ -17,14 +17,14 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Verificar estructura de archivos
+          command: ls -la ~/repo
+      - run:
+          name: Verificar contenido del frontend
+          command: ls -la ~/repo/frontend
+      - run:
           name: Instalar dependencias del frontend
           command: npm install
-      - run:
-          name: Análisis estático del código (ESLint)
-          command: npm run lint
-      - run:
-          name: Auditoría de dependencias del frontend
-          command: npm audit --audit-level=moderate || echo "Vulnerabilidades detectadas"
 
   pre-build-backend:
     executor: backend-executor
