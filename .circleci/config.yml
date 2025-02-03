@@ -14,6 +14,7 @@ executors:
 jobs:
   pre-build-frontend:
     executor: frontend-executor
+    working_directory: ~/repo/frontend
     steps:
       - checkout
       - run:
@@ -42,6 +43,7 @@ jobs:
 
   build-frontend:
     executor: frontend-executor
+    working_directory: ~/repo/frontend
     steps:
       - checkout
       - run:
@@ -61,6 +63,7 @@ jobs:
 
   test-frontend:
     executor: frontend-executor
+    working_directory: ~/repo/frontend
     steps:
       - checkout
       - run:
