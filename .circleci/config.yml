@@ -15,16 +15,20 @@ jobs:
   pre-build-frontend:
     executor: frontend-executor
     steps:
-      - checkout
-      - run:
-          name: Verificar estructura de archivos
-          command: ls -la ~/repo
-      - run:
-          name: Verificar contenido del frontend
-          command: ls -la ~/repo/frontend
-      - run:
-          name: Instalar dependencias del frontend
-          command: npm install
+    - checkout
+    - run:
+        name: Verificar estructura de archivos
+        command: |
+          echo "Listando archivos en ~/repo"
+          ls -la ~/repo
+    - run:
+        name: Verificar contenido del frontend
+        command: |
+          echo "Listando archivos en ~/repo/frontend"
+          ls -la ~/repo/frontend
+    - run:
+        name: Instalar dependencias del frontend
+        command: npm install
 
   pre-build-backend:
     executor: backend-executor
