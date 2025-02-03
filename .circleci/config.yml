@@ -45,6 +45,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Instalar dependencias
+          command: npm install
+      - run:
           name: Construir el frontend
           command: npx ng build --configuration=production
 
