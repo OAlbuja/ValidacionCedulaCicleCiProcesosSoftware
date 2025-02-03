@@ -3,7 +3,7 @@ version: 2.1
 executors:
   frontend-executor:
     docker:
-      - image: cimg/node:20.0-browsers
+      - image: cimg/node:20.0.0
     working_directory: ~/repo/frontend  # Usamos el directorio raíz del repo
 
   backend-executor:
@@ -63,6 +63,7 @@ jobs:
     executor: frontend-executor
     steps:
       - checkout
+      - browser-tools/install-browser-tools
       - run:
           name: Instalar dependencias
           command: cd frontend && npm install
