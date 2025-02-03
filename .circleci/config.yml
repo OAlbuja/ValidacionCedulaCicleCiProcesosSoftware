@@ -46,10 +46,10 @@ jobs:
       - checkout
       - run:
           name: Instalar dependencias
-          command: npm install
+          command: cd frontend && npm install
       - run:
           name: Construir el frontend
-          command: npx ng build --configuration=production
+          command: cd frontend && npx ng build --configuration=production
 
   build-backend:
     executor: backend-executor
