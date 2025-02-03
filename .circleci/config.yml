@@ -3,7 +3,7 @@ version: 2.1
 executors:
   frontend-executor:
     docker:
-      - image: cimg/node:20.0
+      - image: cimg/node:20.0-browsers
     working_directory: ~/repo/frontend  # Usamos el directorio raíz del repo
 
   backend-executor:
