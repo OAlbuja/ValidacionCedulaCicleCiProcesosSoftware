@@ -1,18 +1,18 @@
 version: 2.1
 
 orbs:
-  browser-tools: circleci/browser-tools@1.4.9  # Declaración del orb browser-tools
+  browser-tools: circleci/browser-tools@1.4.9 # Declaración del orb browser-tools
 
 executors:
   frontend-executor:
     docker:
       - image: cimg/node:20.0.0
-    working_directory: ~/repo/frontend  # Usamos el directorio raíz del repo
+    working_directory: ~/repo/frontend # Usamos el directorio raíz del repo
 
   backend-executor:
     docker:
       - image: cimg/openjdk:17.0
-    working_directory: ~/repo  # Usamos el directorio raíz del repo
+    working_directory: ~/repo # Usamos el directorio raíz del repo
 
 jobs:
   pre-build-frontend:
@@ -83,22 +83,23 @@ jobs:
           command: cd CedulaApi && mvn test
 
   deploy:
-    machine: true
+    docker:
+      - image: circleci/python:3.8
     steps:
       - checkout
       - run:
-          name: Construcción y despliegue Docker para el backend
+          name: Construcción de imágenes Docker
           command: |
-            cd CedulaApi
-            docker build -t tuusuario/cedulaapi .
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker push tuusuario/cedulaapi
+            docker build -t mi-backend:latest -f CedulaApi/Dockerfile CedulaApi
+            docker build -t mi-frontend:latest -f frontend/Dockerfile frontend
       - run:
-          name: Preparar el frontend para producción
+          name: Levantar aplicación con Docker Compose
           command: |
-            cd frontend
-            npm run build
-            echo "Sube manualmente el build del frontend a producción."
+            docker-compose up -d
+      - run:
+          name: Verificar contenedores corriendo
+          command: |
+            docker ps
 
 workflows:
   version: 2
