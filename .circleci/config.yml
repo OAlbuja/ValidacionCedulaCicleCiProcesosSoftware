@@ -61,7 +61,6 @@ jobs:
 
   test-frontend:
     executor: frontend-executor
-    working_directory: ~/repo/frontend
     steps:
       - checkout
       - run:
