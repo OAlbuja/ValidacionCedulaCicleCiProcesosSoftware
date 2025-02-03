@@ -7,8 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class CedulaApiApplication {
 
-	private CedulaApiApplication() {
-        // Constructor privado para ocultar el constructor público por defecto
+	protected CedulaApiApplication() {
+        // Constructor protegido para evitar problemas con Checkstyle y permitir a Spring crear el proxy
     }
 
     public static void main(final String[] args) {
