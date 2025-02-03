@@ -4,7 +4,7 @@ executors:
   frontend-executor:
     docker:
       - image: cimg/node:20.0
-    working_directory: ~/repo  # Usamos el directorio raíz del repo
+    working_directory: ~/repo/frontend  # Usamos el directorio raíz del repo
 
   backend-executor:
     docker:
@@ -14,7 +14,6 @@ executors:
 jobs:
   pre-build-frontend:
     executor: frontend-executor
-    working_directory: ~/repo/frontend
     steps:
       - checkout
       - run:
@@ -43,7 +42,6 @@ jobs:
 
   build-frontend:
     executor: frontend-executor
-    working_directory: ~/repo/frontend
     steps:
       - checkout
       - run:
@@ -68,7 +66,7 @@ jobs:
       - checkout
       - run:
           name: Ejecutar pruebas unitarias del frontend
-          command: cd frontend && npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
+          command: npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
 
   test-backend:
     executor: backend-executor
