@@ -15,20 +15,16 @@ jobs:
   pre-build-frontend:
     executor: frontend-executor
     steps:
-    - checkout
-    - run:
-        name: Verificar estructura de archivos
-        command: |
-          echo "Listando archivos en ~/repo"
-          ls -la ~/repo
-    - run:
-        name: Verificar contenido del frontend
-        command: |
-          echo "Listando archivos en ~/repo/frontend"
-          ls -la ~/repo/frontend
-    - run:
-        name: Instalar dependencias del frontend
-        command: npm install
+      - checkout
+      - run:
+          name: Instalar dependencias del frontend
+          command: cd frontend && npm install
+      - run:
+          name: Análisis estático del código (ESLint)
+          command: cd frontend && npm run lint
+      - run:
+          name: Auditoría de dependencias del frontend
+          command: cd frontend && npm audit --audit-level=moderate || echo "Vulnerabilidades detectadas"
 
   pre-build-backend:
     executor: backend-executor
