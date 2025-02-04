@@ -132,9 +132,6 @@ jobs:
       - store_artifacts:
           path: zap_report.html
 
-
-
-
 workflows:
   version: 2
   build-test-deploy:
