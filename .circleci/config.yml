@@ -98,37 +98,40 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Dar permisos amplios al workspace (opcional, útil para ZAP)
+          name: Dar permisos amplios al workspace (opcional)
           command: chmod -R 777 .
       - run:
           name: Crear red Docker si no existe
           command: docker network create app-network || true
       - run:
-          name: Construir imágenes Docker de backend, frontend
+          name: Construir imágenes Docker (backend, frontend)
           command: docker-compose build
       - run:
-          name: Levantar contenedores de frontend, backend, db y zap
+          name: Levantar contenedores (db, backend, frontend, zap)
           command: |
             docker-compose up -d
-            sleep 20  # Espera a que la app arranque
+            echo "Esperamos 20s para que suba la app..."
+            sleep 20
       - run:
-          name: Verificar que los contenedores están corriendo
+          name: Verificar contenedores en ejecución
           command: docker ps
       - run:
-          name: Esperar a que el backend esté listo
+          name: Esperar a que el backend responda
           command: |
-            echo "Esperando a que el backend responda..."
+            echo "Esperando a que el backend responda en http://backend-container:8080..."
             for i in {1..30}; do
               if curl -s http://backend-container:8080 > /dev/null; then
                 echo "Backend listo!"
                 break
               fi
-              echo "Backend aún no responde, esperando..."
+              echo "Aún no responde, esperamos..."
               sleep 3
             done
       - run:
-          name: Ejecutar OWASP ZAP (zap-baseline) en la misma red
+          name: Ejecutar OWASP ZAP (zap-baseline.py)
           command: |
+            # Ejecutamos ZAP dentro del contenedor 'zap' definido en docker-compose.
+            # IMPORTANTÍSIMO: la opción -t con la URL del backend.
             docker-compose run --rm \
               -v $(pwd):/zap/wrk \
               zap \
@@ -137,6 +140,7 @@ jobs:
                 -r /zap/wrk/zap_report.html
       - store_artifacts:
           path: zap_report.html
+
 
 workflows:
   version: 2
