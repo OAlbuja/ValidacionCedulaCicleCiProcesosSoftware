@@ -66,7 +66,9 @@ jobs:
     executor: frontend-executor
     steps:
       - checkout
-      - browser-tools/install-browser-tools
+      - browser-tools/install-chrome:
+          chrome-version: 116.0.5845.96
+          replace-existing: true
       - run:
           name: Instalar dependencias
           command: cd frontend && npm install
