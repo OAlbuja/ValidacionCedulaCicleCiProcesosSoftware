@@ -1,17 +1,15 @@
-version: '3.8'
-
 networks:
   app-network:
     driver: bridge
 
 services:
   backend:
-    image: mi-backend:latest
     container_name: backend-container
     hostname: backend-container
     build:
       context: ./CedulaApi
       dockerfile: Dockerfile
+    image: mi-backend:latest
     ports:
       - "8080:8080"
     environment:
@@ -26,12 +24,12 @@ services:
           - backend-container
 
   frontend:
-    image: mi-frontend:latest
     container_name: frontend-container
     hostname: frontend-container
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: mi-frontend:latest
     ports:
       - "4200:80"
     depends_on:
@@ -66,7 +64,7 @@ services:
       app-network:
         aliases:
           - zap-container
-    # Mantiene el contenedor encendido sin que se cierre
-    entrypoint: ["tail", "-f", "/dev/null"]
-    # Si quieres que ZAP corra siempre como root, descomenta la línea de abajo:
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["tail", "-f", "/dev/null"]
+    # Descomenta si quieres forzar usuario root dentro de ZAP:
     # user: root
