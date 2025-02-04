@@ -104,6 +104,9 @@ jobs:
           name: Crear red Docker si no existe
           command: docker network create app-network || true
       - run:
+          name: Construir imágenes Docker de backend, frontend
+          command: docker-compose build
+      - run:
           name: Levantar contenedores de frontend, backend, db y zap
           command: |
             docker-compose up -d
@@ -129,7 +132,9 @@ jobs:
             docker-compose run --rm \
               -v $(pwd):/zap/wrk \
               zap \
-              zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html
+              zap-baseline.py \
+                -t http://backend-container:8080 \
+                -r /zap/wrk/zap_report.html
       - store_artifacts:
           path: zap_report.html
 

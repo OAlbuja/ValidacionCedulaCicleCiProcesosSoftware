@@ -66,5 +66,3 @@ services:
           - zap-container
     entrypoint: ["/bin/sh", "-c"]
     command: ["tail", "-f", "/dev/null"]
-    # Descomenta si quieres forzar usuario root dentro de ZAP:
-    # user: root
