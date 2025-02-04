@@ -109,7 +109,7 @@ jobs:
           name: Ejecutar OWASP ZAP
           command: |
             docker run --rm -v $(pwd):/zap/wrk:rw \
-              owasp/zap2docker-stable zap-baseline.py -t http://localhost:8080 -r zap_report.html
+              owasp/zap-stable zap-baseline.py -t http://localhost:8080 -r zap_report.html
       - store_artifacts:
           path: zap_report.html
 
