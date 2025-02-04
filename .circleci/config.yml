@@ -123,8 +123,9 @@ jobs:
       - run:
           name: Ejecutar OWASP ZAP en la red de Docker Compose
           command: |
-            docker run --rm --network container:backend-container \
-              ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://backend:8080 -r zap_report.html
+            docker run --rm --network app-network \
+              -v $(pwd):/zap/wrk \
+              ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://backend:8080 -r /zap/wrk/zap_report.html
       - store_artifacts:
           path: zap_report.html
 

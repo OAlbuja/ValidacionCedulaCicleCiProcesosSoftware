@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  app-network:
+    driver: bridge
+
 services:
   backend:
     image: mi-backend:latest
@@ -15,6 +19,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
     depends_on:
       - db
+    networks:
+      - app-network
 
   frontend:
     image: mi-frontend:latest
@@ -26,6 +32,8 @@ services:
       - "4200:80"
     depends_on:
       - backend
+    networks:
+      - app-network
 
   db:
     image: mysql:latest
@@ -36,3 +44,5 @@ services:
       MYSQL_DATABASE: mi_db
     ports:
       - "3306:3306"
+    networks:
+      - app-network
