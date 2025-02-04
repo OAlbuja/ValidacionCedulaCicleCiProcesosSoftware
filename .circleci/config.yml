@@ -101,44 +101,50 @@ jobs:
           name: Instalar 'dos2unix' y convertir .yml a LF
           command: |
             sudo apt-get update
-            sudo apt-get install -y dos2unix
+            sudo apt-get install -y dos2unix docker-compose
             find . -name "*.yml" -exec dos2unix {} \;
       - run:
-          name: Dar permisos amplios al workspace (opcional)
-          command: chmod -R 777 .
-      - run:
-          name: Crear red Docker si no existe
+          name: Crear red Docker
           command: docker network create app-network || true
       - run:
-          name: Construir imágenes Docker (backend, frontend)
+          name: Construir imágenes
           command: docker-compose build
       - run:
-          name: Levantar contenedores db, backend, frontend, zap
+          name: Iniciar contenedores
           command: |
             docker-compose up -d
-            echo "Esperamos ~40s para que suba la app..."  # Cambiado de 20s a 40s
-            sleep 40
+            echo "Esperando 50 segundos para inicialización..."  # Aumentado a 50s
+            sleep 50
       - run:
-          name: Verificar contenedores en ejecución
-          command: docker ps
+          name: Verificar logs del backend
+          command: docker logs backend-container
       - run:
-          name: Esperar a que el backend responda
-          command: |  # Cambiado el endpoint de verificación
-            echo "Esperando backend en http://backend:8080/actuator/health..."
-            for i in {1..30}; do
-              if curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; then
-                echo "Backend listo!"
-                break
+          name: Esperar backend listo
+          command: |  # Verificación con endpoint real
+            echo "Verificando /api/cedulas/validar..."
+            for i in {1..20}; do
+              if curl -s "http://backend:8080/api/cedulas/validar?cedula=0931811087" | grep -q '"valida":'; then
+                echo "Backend UP!"
+                exit 0
               fi
-              echo "No responde todavía..."
-              sleep 3
+              sleep 5
+              echo "Intento $i/20..."
             done
+            exit 1
       - run:
           name: Ejecutar ZAP
-          command: |  # Cambiado el target a 'backend' en lugar de 'backend-container'
-            docker-compose run --rm -v $(pwd):/zap/wrk zap zap-baseline.py -t http://backend:8080 -r /zap/wrk/zap_report.html
+          command: |  # Comando corregido
+            docker-compose run --rm \
+              -v $(pwd):/zap/wrk \
+              zap zap-baseline.py \
+              -t http://backend:8080/api/cedulas/validar \
+              -r /zap/wrk/zap_report.html \
+              -J /zap/wrk/zap_report.json \
+              -I -D 120
       - store_artifacts:
           path: zap_report.html
+      - store_artifacts:
+          path: zap_report.json
 
 
 

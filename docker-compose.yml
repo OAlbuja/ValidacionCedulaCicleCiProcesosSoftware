@@ -44,13 +44,15 @@ services:
     hostname: zap-container
     depends_on:
       - backend
-    networks:  # Añadida configuración de red
+    networks:
       app-network:
         aliases:
           - zap-container
-    # Mantener el resto de la configuración igual
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["tail", "-f", "/dev/null"]
+    # Eliminar entrypoint y command personalizados (esto causa conflicto)
+    # entrypoint: ["/bin/sh", "-c"]  # <- QUITAR ESTO
+    # command: ["tail", "-f", "/dev/null"]  # <- QUITAR ESTO
+    volumes:
+      - ./zap-config:/home/zap/.ZAP/  # Opcional: para persistir configuraciones
 
   frontend:
     container_name: frontend-container
