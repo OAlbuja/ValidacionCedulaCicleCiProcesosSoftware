@@ -73,27 +73,27 @@
 			</plugin>
 
 			<plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>12.0.2</version>
-            <executions>
-                <execution>
-                    <goals>
-                        <goal>check</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <!-- No fallar el build si hay errores al actualizar la NVD -->
-                <failOnError>false</failOnError>
-                <!-- Añadir un retraso de 2000 ms entre solicitudes a la NVD -->
-                <cveValidForHours>24</cveValidForHours>
-                <connectionTimeout>120000</connectionTimeout>
-                <dataMirroringType>none</dataMirroringType>
-                <!-- Usar datos locales si la actualización falla -->
-                <autoUpdate>false</autoUpdate>
-            </configuration>
-        </plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>12.0.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<!-- No fallar el build si hay errores al actualizar la NVD -->
+					<failOnError>false</failOnError>
+					<!-- Añadir un retraso de 2000 ms entre solicitudes a la NVD -->
+					<cveValidForHours>24</cveValidForHours>
+					<connectionTimeout>120000</connectionTimeout>
+					<dataMirroringType>none</dataMirroringType>
+					<!-- Usar datos locales si la actualización falla -->
+					<autoUpdate>false</autoUpdate>
+				</configuration>
+			</plugin>
 
 		</plugins>
 	</build>

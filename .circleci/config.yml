@@ -92,11 +92,14 @@ jobs:
             cd CedulaApi
             mvn org.owasp:dependency-check-maven:check \
             -Ddependency-check.nvd.apiKey=${NVD_API_KEY}
-  
+
   dast-scan:
     machine: true
     steps:
       - checkout
+      - run:
+          name: Dar todos los permisos al workspace
+          command: chmod -R 777 .
       - run:
           name: Crear red Docker si no existe
           command: docker network create app-network || true
@@ -127,8 +130,10 @@ jobs:
           name: Ejecutar OWASP ZAP en la red de Docker Compose
           command: |
             docker run --rm --network app-network \
+              --user root \
               -v $(pwd):/zap/wrk \
-              ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html
+              ghcr.io/zaproxy/zaproxy:stable \
+              zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html
       - store_artifacts:
           path: zap_report.html
 
