@@ -98,6 +98,13 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Instalar 'dos2unix' y convertir config.yml
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y dos2unix
+            # Convertimos todos los archivos YAML a formato Unix
+            find . -name "*.yml" -exec dos2unix {} \;
+      - run:
           name: Dar permisos amplios al workspace (opcional)
           command: chmod -R 777 .
       - run:
@@ -128,16 +135,12 @@ jobs:
               sleep 3
             done
       - run:
-          name: Ejecutar OWASP ZAP (zap-baseline.py)
+          name: Ejecutar OWASP ZAP (zap-baseline.py) en ONE-LINER
           command: |
-            # Ejecutamos ZAP dentro del contenedor 'zap' definido en docker-compose.
-            # IMPORTANTÍSIMO: la opción -t con la URL del backend.
-            docker-compose run --rm \
-              -v $(pwd):/zap/wrk \
-              zap \
-              zap-baseline.py \
-                -t http://backend-container:8080 \
-                -r /zap/wrk/zap_report.html
+            # Ejecutamos un one-liner para evitar multiline.
+            echo "Comando ZAP que vamos a ejecutar:"
+            echo 'docker-compose run --rm -v $(pwd):/zap/wrk zap zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html'
+            docker-compose run --rm -v $(pwd):/zap/wrk zap zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html
       - store_artifacts:
           path: zap_report.html
 
