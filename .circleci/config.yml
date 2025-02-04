@@ -76,7 +76,11 @@ jobs:
           command: cd frontend && npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
 
   test-backend:
-    executor: backend-executor
+    docker:
+      - image: cimg/openjdk:17.0
+    working_directory: ~/repo
+    environment:
+      NVD_API_KEY: $NVD_API_KEY
     steps:
       - checkout
       - run:
