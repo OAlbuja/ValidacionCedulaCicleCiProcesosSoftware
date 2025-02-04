@@ -92,22 +92,19 @@ jobs:
             cd CedulaApi
             mvn org.owasp:dependency-check-maven:check \
             -Ddependency-check.nvd.apiKey=${NVD_API_KEY}
-
+  
   dast-scan:
     machine: true
     steps:
       - checkout
       - run:
-          name: Dar todos los permisos al workspace
+          name: Dar permisos amplios al workspace (opcional, útil para ZAP)
           command: chmod -R 777 .
       - run:
           name: Crear red Docker si no existe
           command: docker network create app-network || true
       - run:
-          name: Construir imágenes Docker de frontend y backend
-          command: docker-compose build
-      - run:
-          name: Levantar contenedores de frontend y backend
+          name: Levantar contenedores de frontend, backend, db y zap
           command: |
             docker-compose up -d
             sleep 20  # Espera a que la app arranque
@@ -127,12 +124,11 @@ jobs:
               sleep 3
             done
       - run:
-          name: Ejecutar OWASP ZAP en la red de Docker Compose
+          name: Ejecutar OWASP ZAP (zap-baseline) en la misma red
           command: |
-            docker run --rm --network app-network \
-              --user root \
+            docker-compose run --rm \
               -v $(pwd):/zap/wrk \
-              ghcr.io/zaproxy/zaproxy:stable \
+              zap \
               zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html
       - store_artifacts:
           path: zap_report.html
@@ -141,6 +137,7 @@ workflows:
   version: 2
   build-test-deploy:
     jobs:
+      # Habilita lo que necesites según tu orden de build/test.
       # - pre-build-frontend
       # - pre-build-backend
       # - build-frontend:
