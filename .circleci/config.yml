@@ -93,9 +93,9 @@ jobs:
             mvn org.owasp:dependency-check-maven:check \
             -Ddependency-check.nvd.apiKey=${NVD_API_KEY}
   
-    dast-scan:
-      machine: true
-      steps:
+  dast-scan:
+    machine: true
+    steps:
       - checkout
       - run:
           name: Construir imágenes Docker
@@ -114,7 +114,6 @@ jobs:
               ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://host.docker.internal:8080 -r zap_report.html
       - store_artifacts:
           path: zap_report.html
-
 
   trivy-scan:
     machine: true
