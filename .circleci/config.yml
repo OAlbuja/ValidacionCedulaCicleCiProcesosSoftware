@@ -81,6 +81,62 @@ jobs:
       - run:
           name: Ejecutar pruebas unitarias del backend
           command: cd CedulaApi && mvn test
+      - run:
+          name: Análisis de dependencias con OWASP Dependency-Check
+          command: |
+            cd CedulaApi
+            mvn org.owasp:dependency-check-maven:check \
+            -Ddependency-check.nvd.apiKey=${NVD_API_KEY}
+  
+  dast-scan:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Construir imágenes Docker
+          command: |
+            docker-compose build
+      - run:
+          name: Levantar servicios con Docker Compose
+          command: |
+            docker-compose up -d
+            sleep 15  # Esperar a que los servicios arranquen
+      - run:
+          name: Ejecutar OWASP ZAP
+          command: |
+            docker run --rm -v $(pwd):/zap/wrk:rw \
+              owasp/zap2docker-stable zap-baseline.py -t http://localhost:8080 -r zap_report.html
+      - store_artifacts:
+          path: zap_report.html
+
+  trivy-scan:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Instalar Trivy
+          command: |
+            curl -sfL https://aquasecurity.github.io/trivy-repo/deb-install.sh | sh -
+            apt-get install -y trivy
+      - run:
+          name: Levantar servicios con Docker Compose
+          command: |
+            docker-compose up -d
+            sleep 15  # Esperar a que los servicios arranquen
+      - run:
+          name: Escanear contenedores con Trivy
+          command: |
+            trivy --exit-code 0 --severity HIGH,CRITICAL image mi-backend:latest > /tmp/trivy_backend_report.txt
+            trivy --exit-code 0 --severity HIGH,CRITICAL image mi-frontend:latest > /tmp/trivy_frontend_report.txt
+      - run:
+          name: Verificar archivos en /tmp/
+          command: ls -l /tmp/
+      - store_artifacts:
+          path: /tmp/trivy_backend_report.txt
+          destination: backend-report
+      - store_artifacts:
+          path: /tmp/trivy_frontend_report.txt
+          destination: frontend-report
 
 workflows:
   version: 2
@@ -100,3 +156,9 @@ workflows:
       - test-backend:
           requires:
             - build-backend
+      - dast-scan:
+          requires:
+            - test-backend
+      - trivy-scan:
+          requires:
+            - dast-scan
