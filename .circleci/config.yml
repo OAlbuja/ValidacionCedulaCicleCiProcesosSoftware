@@ -98,20 +98,24 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Construir imágenes Docker
+          name: Construir imágenes Docker de frontend y backend
           command: docker-compose build
       - run:
-          name: Levantar servicios con Docker Compose
+          name: Levantar contenedores de frontend y backend
           command: |
             docker-compose up -d
-            sleep 15  # Esperar a que los servicios arranquen
+            sleep 20  # Espera 20 segundos a que la app arranque
       - run:
-          name: Ejecutar OWASP ZAP
+          name: Verificar que los contenedores están corriendo
+          command: docker ps
+      - run:
+          name: Ejecutar OWASP ZAP contra el backend
           command: |
             docker run --rm -v $(pwd):/zap/wrk:rw \
-              owasp/zap-stable zap-baseline.py -t http://localhost:8080 -r zap_report.html
+              owasp/zap-stable zap-baseline.py -t http://backend:8080 -r zap_report.html
       - store_artifacts:
           path: zap_report.html
+  
 
 workflows:
   version: 2
