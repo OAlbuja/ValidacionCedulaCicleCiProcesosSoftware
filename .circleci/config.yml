@@ -116,7 +116,7 @@ jobs:
           command: |
             echo "Esperando a que el backend responda..."
             for i in {1..30}; do
-              if curl -s http://localhost:8080 > /dev/null; then
+              if curl -s http://backend-container:8080 > /dev/null; then
                 echo "Backend listo!"
                 break
               fi
@@ -128,7 +128,7 @@ jobs:
           command: |
             docker run --rm --network app-network \
               -v $(pwd):/zap/wrk \
-              ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://backend:8080 -r /zap/wrk/zap_report.html
+              ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html
       - store_artifacts:
           path: zap_report.html
 
