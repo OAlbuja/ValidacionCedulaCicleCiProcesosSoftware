@@ -98,10 +98,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Crear directorios de trabajo para ZAP
-          command: |
-            mkdir -p zap_workdir/input
-            mkdir -p zap_workdir/output
+          name: Crear directorio de trabajo para ZAP
+          command: mkdir -p zap_workdir
       - run:
           name: Construir imágenes Docker
           command: docker-compose build
@@ -109,19 +107,16 @@ jobs:
           name: Levantar servicios con Docker Compose
           command: |
             docker-compose up -d
-            sleep 15  # Esperar a que los servicios arranquen
+            sleep 15
       - run:
           name: Ejecutar OWASP ZAP
           command: |
             docker run --rm \
-              -v $(pwd)/zap_workdir/input:/zap/wrk:rw \
-              -v $(pwd)/zap_workdir/output:/zap/output:rw \
-              -e HOME=/zap/wrk \
-              -e WORKDIR=/zap/wrk \
-              --user $(id -u):$(id -g) \
-              ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t http://host.docker.internal:8080 -r /zap/output/zap_report.html
+              -v "$(pwd)/zap_workdir:/zap/wrk:rw" \
+              ghcr.io/zaproxy/zaproxy:stable \
+              zap-baseline.py -t http://host.docker.internal:8080 -r zap_report.html
       - store_artifacts:
-          path: zap_workdir/output/zap_report.html
+          path: zap_workdir/zap_report.html
 
   trivy-scan:
     machine: true
