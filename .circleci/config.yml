@@ -116,17 +116,17 @@ jobs:
           name: Levantar contenedores db, backend, frontend, zap
           command: |
             docker-compose up -d
-            echo "Esperamos ~20s para que suba la app..."
-            sleep 20
+            echo "Esperamos ~40s para que suba la app..."  # Cambiado de 20s a 40s
+            sleep 40
       - run:
           name: Verificar contenedores en ejecución
           command: docker ps
       - run:
           name: Esperar a que el backend responda
-          command: |
-            echo "Esperando backend en http://backend-container:8080..."
+          command: |  # Cambiado el endpoint de verificación
+            echo "Esperando backend en http://backend:8080/actuator/health..."
             for i in {1..30}; do
-              if curl -s http://backend-container:8080 > /dev/null; then
+              if curl -s http://backend:8080/actuator/health | grep -q '"status":"UP"'; then
                 echo "Backend listo!"
                 break
               fi
@@ -134,13 +134,13 @@ jobs:
               sleep 3
             done
       - run:
-          name: Ejecutar ZAP en one-liner (sin multiline)
-          command: |
-            echo "Comando ZAP que vamos a ejecutar:"
-            echo 'docker-compose run --rm -v $(pwd):/zap/wrk zap zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html'
-            docker-compose run --rm -v $(pwd):/zap/wrk zap zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html
+          name: Ejecutar ZAP
+          command: |  # Cambiado el target a 'backend' en lugar de 'backend-container'
+            docker-compose run --rm -v $(pwd):/zap/wrk zap zap-baseline.py -t http://backend:8080 -r /zap/wrk/zap_report.html
       - store_artifacts:
           path: zap_report.html
+
+
 
 
 workflows:

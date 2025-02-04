@@ -33,10 +33,24 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
     depends_on:
       - db
-    networks:
+    networks:  # Añadida configuración explícita de red
       app-network:
         aliases:
-          - backend-container
+          - backend  # Este alias es clave
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: zap-container
+    hostname: zap-container
+    depends_on:
+      - backend
+    networks:  # Añadida configuración de red
+      app-network:
+        aliases:
+          - zap-container
+    # Mantener el resto de la configuración igual
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["tail", "-f", "/dev/null"]
 
   frontend:
     container_name: frontend-container
@@ -53,19 +67,3 @@ services:
       app-network:
         aliases:
           - frontend-container
-
-  zap:
-    image: ghcr.io/zaproxy/zaproxy:stable
-    container_name: zap-container
-    hostname: zap-container
-    depends_on:
-      - backend
-    networks:
-      app-network:
-        aliases:
-          - zap-container
-    # Mantén ZAP corriendo en modo "idle" para no cerrarse de inmediato:
-    entrypoint: ["/bin/sh", "-c"]
-    command: ["tail", "-f", "/dev/null"]
-    # Descomenta si quieres forzar usuario root:
-    # user: root
