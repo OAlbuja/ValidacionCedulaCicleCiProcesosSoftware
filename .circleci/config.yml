@@ -1,18 +1,18 @@
 version: 2.1
 
 orbs:
-  browser-tools: circleci/browser-tools@1.4.9 # Declaración del orb browser-tools
+  browser-tools: circleci/browser-tools@1.4.9
 
 executors:
   frontend-executor:
     docker:
       - image: cimg/node:20.0.0
-    working_directory: ~/repo/frontend # Usamos el directorio raíz del repo
+    working_directory: ~/repo/frontend
 
   backend-executor:
     docker:
       - image: cimg/openjdk:17.0
-    working_directory: ~/repo # Usamos el directorio raíz del repo
+    working_directory: ~/repo
 
 jobs:
   pre-build-frontend:
@@ -91,18 +91,17 @@ jobs:
           command: |
             cd CedulaApi
             mvn org.owasp:dependency-check-maven:check \
-            -Ddependency-check.nvd.apiKey=${NVD_API_KEY}
-  
+                -Ddependency-check.nvd.apiKey=${NVD_API_KEY}
+
   dast-scan:
     machine: true
     steps:
       - checkout
       - run:
-          name: Instalar 'dos2unix' y convertir config.yml
+          name: Instalar 'dos2unix' y convertir .yml a LF
           command: |
             sudo apt-get update
             sudo apt-get install -y dos2unix
-            # Convertimos todos los archivos YAML a formato Unix
             find . -name "*.yml" -exec dos2unix {} \;
       - run:
           name: Dar permisos amplios al workspace (opcional)
@@ -114,10 +113,10 @@ jobs:
           name: Construir imágenes Docker (backend, frontend)
           command: docker-compose build
       - run:
-          name: Levantar contenedores (db, backend, frontend, zap)
+          name: Levantar contenedores db, backend, frontend, zap
           command: |
             docker-compose up -d
-            echo "Esperamos 20s para que suba la app..."
+            echo "Esperamos ~20s para que suba la app..."
             sleep 20
       - run:
           name: Verificar contenedores en ejecución
@@ -125,19 +124,18 @@ jobs:
       - run:
           name: Esperar a que el backend responda
           command: |
-            echo "Esperando a que el backend responda en http://backend-container:8080..."
+            echo "Esperando backend en http://backend-container:8080..."
             for i in {1..30}; do
               if curl -s http://backend-container:8080 > /dev/null; then
                 echo "Backend listo!"
                 break
               fi
-              echo "Aún no responde, esperamos..."
+              echo "No responde todavía..."
               sleep 3
             done
       - run:
-          name: Ejecutar OWASP ZAP (zap-baseline.py) en ONE-LINER
+          name: Ejecutar ZAP en one-liner (sin multiline)
           command: |
-            # Ejecutamos un one-liner para evitar multiline.
             echo "Comando ZAP que vamos a ejecutar:"
             echo 'docker-compose run --rm -v $(pwd):/zap/wrk zap zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html'
             docker-compose run --rm -v $(pwd):/zap/wrk zap zap-baseline.py -t http://backend-container:8080 -r /zap/wrk/zap_report.html
