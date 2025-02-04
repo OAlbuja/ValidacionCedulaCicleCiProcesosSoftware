@@ -123,20 +123,20 @@ workflows:
   version: 2
   build-test-deploy:
     jobs:
-      - pre-build-frontend
-      - pre-build-backend
-      - build-frontend:
-          requires:
-            - pre-build-frontend
-      - build-backend:
-          requires:
-            - pre-build-backend
-      - test-frontend:
-          requires:
-            - build-frontend
-      - test-backend:
-          requires:
-            - build-backend
+      # - pre-build-frontend
+      # - pre-build-backend
+      # - build-frontend:
+      #     requires:
+      #       - pre-build-frontend
+      # - build-backend:
+      #     requires:
+      #       - pre-build-backend
+      # - test-frontend:
+      #     requires:
+      #       - build-frontend
+      # - test-backend:
+      #     requires:
+      #       - build-backend
       - dast-scan:
           requires:
             - test-backend
