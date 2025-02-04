@@ -37,6 +37,9 @@ jobs:
           name: Instalar dependencias del backend
           command: cd CedulaApi && mvn install -DskipTests
       - run:
+          name: Compilar el backend (Generar el .jar)
+          command: cd CedulaApi && mvn clean package
+      - run:
           name: Análisis estático del código (Checkstyle)
           command: cd CedulaApi && mvn checkstyle:check
       - run:
