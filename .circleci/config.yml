@@ -109,6 +109,18 @@ jobs:
           name: Verificar que los contenedores están corriendo
           command: docker ps
       - run:
+          name: Esperar a que el backend esté listo
+          command: |
+            echo "Esperando a que el backend responda..."
+            for i in {1..30}; do
+              if curl -s http://localhost:8080 > /dev/null; then
+                echo "Backend listo!"
+                break
+              fi
+              echo "Backend aún no responde, esperando..."
+              sleep 3
+            done
+      - run:
           name: Ejecutar OWASP ZAP en la red de Docker Compose
           command: |
             docker run --rm --network container:backend-container \
