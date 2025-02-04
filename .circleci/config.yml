@@ -98,6 +98,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Crear red Docker si no existe
+          command: docker network create app-network || true
+      - run:
           name: Construir imágenes Docker de frontend y backend
           command: docker-compose build
       - run:
