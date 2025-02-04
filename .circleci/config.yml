@@ -137,6 +137,6 @@ workflows:
       # - test-backend:
       #     requires:
       #       - build-backend
-      - dast-scan:
-          requires:
-            - test-backend
+      - dast-scan
+          # requires:
+          #   - test-backend
