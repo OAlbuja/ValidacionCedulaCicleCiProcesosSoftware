@@ -1,3 +1,5 @@
+version: '3.8'
+
 networks:
   app-network:
     driver: bridge
@@ -14,9 +16,7 @@ services:
     ports:
       - "3306:3306"
     networks:
-      app-network:
-        aliases:
-          - mysql-container
+      - app-network
 
   backend:
     container_name: backend-container
@@ -33,26 +33,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root
     depends_on:
       - db
-    networks:  # Añadida configuración explícita de red
-      app-network:
-        aliases:
-          - backend  # Este alias es clave
-
-  zap:
-    image: ghcr.io/zaproxy/zaproxy:stable
-    container_name: zap-container
-    hostname: zap-container
-    depends_on:
-      - backend
     networks:
-      app-network:
-        aliases:
-          - zap-container
-    # Eliminar entrypoint y command personalizados (esto causa conflicto)
-    # entrypoint: ["/bin/sh", "-c"]  # <- QUITAR ESTO
-    # command: ["tail", "-f", "/dev/null"]  # <- QUITAR ESTO
-    volumes:
-      - ./zap-config:/home/zap/.ZAP/  # Opcional: para persistir configuraciones
+      - app-network
 
   frontend:
     container_name: frontend-container
@@ -66,6 +48,15 @@ services:
     depends_on:
       - backend
     networks:
-      app-network:
-        aliases:
-          - frontend-container
+      - app-network
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: zap-container
+    hostname: zap-container
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    volumes:
+      - ./zap-config:/home/zap/.ZAP/
