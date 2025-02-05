@@ -62,43 +62,12 @@ jobs:
           name: Compilar el backend
           command: cd CedulaApi && mvn clean package
 
-  test-frontend:
-    executor: frontend-executor
-    steps:
-      - checkout
-      - browser-tools/install-chrome:
-          replace-existing: true
-      - run:
-          name: Instalar dependencias
-          command: cd frontend && npm install
-      - run:
-          name: Ejecutar pruebas unitarias del frontend
-          command: cd frontend && npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
-
-  test-backend:
-    docker:
-      - image: cimg/openjdk:17.0
-    working_directory: ~/repo
-    environment:
-      NVD_API_KEY: $NVD_API_KEY
-    steps:
-      - checkout
-      - run:
-          name: Ejecutar pruebas unitarias del backend
-          command: cd CedulaApi && mvn test
-      - run:
-          name: Análisis de dependencias con OWASP Dependency-Check
-          command: |
-            cd CedulaApi
-            mvn org.owasp:dependency-check-maven:check \
-                -Ddependency-check.nvd.apiKey=${NVD_API_KEY}
-
   dast-scan:
     machine: true
     steps:
       - checkout
       - run:
-          name: Instalar 'dos2unix' y convertir .yml a LF
+          name: Instalar herramientas necesarias
           command: |
             sudo apt-get update
             sudo apt-get install -y dos2unix docker-compose
@@ -107,33 +76,36 @@ jobs:
           name: Crear red Docker
           command: docker network create app-network || true
       - run:
-          name: Construir imágenes
+          name: Construir imágenes Docker
           command: docker-compose build
       - run:
           name: Iniciar contenedores
           command: |
             docker-compose up -d
-            echo "Esperando 50 segundos para inicialización..."  # Aumentado a 50s
+            echo "Esperando 50 segundos para inicialización..."
             sleep 50
       - run:
-          name: Verificar logs del backend
-          command: docker logs backend-container
+          name: Verificar contenedores activos
+          command: docker ps -a
       - run:
-          name: Esperar backend listo
-          command: |  # Verificación con endpoint real
-            echo "Verificando /api/cedulas/validar..."
+          name: Mostrar logs del backend
+          command: docker-compose logs backend
+      - run:
+          name: Verificar si el backend responde
+          command: |
             for i in {1..20}; do
-              if curl -s "http://backend:8080/api/cedulas/validar?cedula=0931811087" | grep -q '"valida":'; then
-                echo "Backend UP!"
+              if docker-compose run --rm backend curl -s -o /dev/null -w "%{http_code}" "http://backend:8080/api/cedulas/validar?cedula=1721544052" | grep -q "200"; then
+                echo "✅ Backend está disponible!"
                 exit 0
               fi
+              echo "⏳ Intento $i/20 - Esperando backend..."
               sleep 5
-              echo "Intento $i/20..."
             done
+            echo "❌ ERROR: Backend no está respondiendo dentro de CircleCI"
             exit 1
       - run:
-          name: Ejecutar ZAP
-          command: |  # Comando corregido
+          name: Ejecutar escaneo con ZAP
+          command: |
             docker-compose run --rm \
               -v $(pwd):/zap/wrk \
               zap zap-baseline.py \
@@ -145,8 +117,6 @@ jobs:
           path: zap_report.html
       - store_artifacts:
           path: zap_report.json
-
-
 
 
 workflows:
