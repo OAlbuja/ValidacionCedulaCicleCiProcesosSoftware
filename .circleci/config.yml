@@ -4,12 +4,68 @@ orbs:
   browser-tools: circleci/browser-tools@1.4.9
 
 executors:
+  frontend-executor:
+    docker:
+      - image: cimg/node:20.0.0
+    working_directory: ~/repo/frontend
+
   backend-executor:
     docker:
       - image: cimg/openjdk:17.0
     working_directory: ~/repo
 
 jobs:
+  ###########################
+  # 1) PRE-BUILD FRONTEND
+  ###########################
+  pre-build-frontend:
+    executor: frontend-executor
+    steps:
+      - checkout
+      - run:
+          name: Instalar dependencias del frontend
+          command: cd frontend && npm install
+      - run:
+          name: Análisis estático del código (ESLint)
+          command: cd frontend && npm run lint
+      - run:
+          name: Auditoría de dependencias del frontend
+          command: cd frontend && npm audit --audit-level=moderate || echo "Vulnerabilidades detectadas"
+
+  ###########################
+  # 2) PRE-BUILD BACKEND
+  ###########################
+  pre-build-backend:
+    executor: backend-executor
+    steps:
+      - checkout
+      - run:
+          name: Instalar dependencias del backend
+          command: cd CedulaApi && mvn install -DskipTests
+      - run:
+          name: Análisis estático del código (Checkstyle)
+          command: cd CedulaApi && mvn checkstyle:check
+      - run:
+          name: Verificar dependencias obsoletas en el backend
+          command: cd CedulaApi && mvn versions:display-dependency-updates
+
+  ###########################
+  # 3) BUILD FRONTEND
+  ###########################
+  build-frontend:
+    executor: frontend-executor
+    steps:
+      - checkout
+      - run:
+          name: Instalar dependencias
+          command: cd frontend && npm install
+      - run:
+          name: Construir el frontend
+          command: cd frontend && npx ng build --configuration=production
+
+  ###########################
+  # 4) BUILD BACKEND
+  ###########################
   build-backend:
     executor: backend-executor
     steps:
@@ -18,6 +74,46 @@ jobs:
           name: Compilar el backend
           command: cd CedulaApi && mvn clean package
 
+  ###########################
+  # 5) TEST FRONTEND
+  ###########################
+  test-frontend:
+    executor: frontend-executor
+    steps:
+      - checkout
+      - browser-tools/install-chrome:
+          replace-existing: true
+      - run:
+          name: Instalar dependencias
+          command: cd frontend && npm install
+      - run:
+          name: Ejecutar pruebas unitarias del frontend
+          command: cd frontend && npm run test -- --no-watch --no-progress --browsers=ChromeHeadless
+
+  ###########################
+  # 6) TEST BACKEND
+  ###########################
+  test-backend:
+    docker:
+      - image: cimg/openjdk:17.0
+    working_directory: ~/repo
+    environment:
+      NVD_API_KEY: $NVD_API_KEY
+    steps:
+      - checkout
+      - run:
+          name: Ejecutar pruebas unitarias del backend
+          command: cd CedulaApi && mvn test
+      - run:
+          name: Análisis de dependencias con OWASP Dependency-Check
+          command: |
+            cd CedulaApi
+            mvn org.owasp:dependency-check-maven:check \
+                -Ddependency-check.nvd.apiKey=${NVD_API_KEY}
+
+  ###########################
+  # 7) DAST-SCAN (ZAP)
+  ###########################
   dast-scan:
     machine: true
     steps:
@@ -34,10 +130,10 @@ jobs:
           name: Construir imágenes Docker
           command: docker-compose build
       - run:
-          name: Iniciar backend en Docker
+          name: Iniciar contenedores (solo backend si no tienes DB)
           command: |
             docker-compose up -d backend
-            echo "Esperando 30 segundos para que el backend arranque..."
+            echo "Esperando 30s para iniciar..."
             sleep 30
       - run:
           name: Verificar logs del backend
@@ -70,30 +166,32 @@ jobs:
       - store_artifacts:
           path: zap_report.json
 
-
+#####################################
+#         WORKFLOW (ORDEN)          #
+#####################################
 workflows:
   version: 2
   build-test-deploy:
     jobs:
-      - build-backend
-      - dast-scan:
+      - pre-build-frontend
+      - pre-build-backend
+
+      - build-frontend:
+          requires:
+            - pre-build-frontend
+
+      - build-backend:
+          requires:
+            - pre-build-backend
+
+      - test-frontend:
+          requires:
+            - build-frontend
+
+      - test-backend:
           requires:
             - build-backend
-      # Habilita lo que necesites según tu orden de build/test.
-      # - pre-build-frontend
-      # - pre-build-backend
-      # - build-frontend:
-      #     requires:
-      #       - pre-build-frontend
-      # - build-backend:
-      #     requires:
-      #       - pre-build-backend
-      # - test-frontend:
-      #     requires:
-      #       - build-frontend
-      # - test-backend:
-      #     requires:
-      #       - build-backend
-      # - dast-scan:
-          # requires:
-          #   - test-backend
+
+      - dast-scan:
+          requires:
+            - test-backend
